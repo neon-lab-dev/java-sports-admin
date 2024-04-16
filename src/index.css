@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  font-family: "Lato", sans-serif;
+}
+
+
+.scrollbar-width-sm::-webkit-scrollbar {
+  width: 4px;
+}
+
+.scrollbar-width-sm::-webkit-scrollbar-thumb {
+  border-radius: 10%;
+  @apply bg-red
+}
+
+
+.hidden-scrollbar {
+  /* scrollbar-width: none; */
+  scrollbar-color: white;
+
+}
+
+
+.hidden-scrollbar::-webkit-scrollbar-thumb {
+  opacity: 0;
+  @apply bg-white
+}
