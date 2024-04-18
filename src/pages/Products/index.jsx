@@ -131,8 +131,6 @@ const Products = () => {
                   <th className="text-[14px] font-bold text-black ">
                     Category
                   </th>
-                  <th className="text-[14px] font-bold text-black">Discount</th>
-                  <th className="text-[14px] font-bold text-black">Stock</th>
                   <th className="text-[14px] font-bold text-black text-center">
                     Action
                   </th>
@@ -162,12 +160,7 @@ const Products = () => {
                         <td className="text-[14px] font-semibold text-black">
                           {item.category}
                         </td>
-                        <td className="text-[14px] font-semibold text-black">
-                          {item.discountedpercent}%
-                        </td>
-                        <td className="text-[14px] font-semibold text-black">
-                          {item.stock}
-                        </td>
+
                         <td className="text-[14px] text-center font-semibold text-black">
                           <div className="flex items-center justify-center gap-3">
                             <Link

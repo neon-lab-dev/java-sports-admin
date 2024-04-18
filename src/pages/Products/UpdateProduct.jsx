@@ -12,14 +12,18 @@ import {
   subcategoriesMap,
 } from "../../assets/data/productFilters";
 import getFilters from "../../utils/getFilters";
+import SizeModal from "./SizeModal";
+import editIcon from "../../assets/icons/edit-svgrepo-com.svg";
 
 const UpdateProduct = () => {
   const [availableColors, setAvailableColors] = useState([]);
+  const [sizes, setSizes] = useState([]);
   const [categories] = useState(["Gear", "Shoes", "Helmets"]);
   const [selectedImages, setSelectedImages] = useState([]);
   const queryClient = useQueryClient();
   const [isRan, setIsRan] = useState(false);
   const [isWarningShown, setIsWarningShown] = useState(false);
+  const [editingValue, setEditingValue] = useState(undefined);
 
   const { productId } = useParams();
   // get product details query
@@ -77,6 +81,13 @@ const UpdateProduct = () => {
   // form submit
   const handleFormSubmit = (data) => {
     try {
+      if (!sizes.length > 0) {
+        return Swal.fire({
+          title: "Error",
+          text: "Please add size",
+          icon: "error",
+        });
+      }
       if (selectedImages.length === 0) {
         return Swal.fire({
           title: "Error",
@@ -84,6 +95,7 @@ const UpdateProduct = () => {
           icon: "error",
         });
       } else {
+        data.sizes = sizes;
         const fd = new FormData();
         // deleting unused keys which is came from DB
         delete data.Availablecolor;
@@ -97,10 +109,17 @@ const UpdateProduct = () => {
           }
         }
         for (const item of Object.keys(data)) {
-          fd.append(item, data[item]);
+          if (item === "sizes" && Array.isArray(data[item])) {
+            for (let i = 0; i < data[item].length; i++) {
+              for (const key in data[item][i]) {
+                fd.append(`${item}[${i}][${key}]`, data[item][i][key]);
+              }
+            }
+          } else {
+            fd.append(item, data[item]);
+          }
         }
         const allColors = [...new Set([data.color, ...availableColors])];
-        console.log(allColors);
 
         fd.append("Availablecolor", allColors.join(","));
         mutate({ productId: productId, productData: fd });
@@ -160,7 +179,7 @@ const UpdateProduct = () => {
       for (const item of Object.keys(data?.product)) {
         setValue(item, data?.product[item]);
       }
-      setValue("size", data?.product?.size.split(","));
+      setSizes(data?.product?.sizes);
       for (const item of data?.product?.images) {
         setSelectedImages([...selectedImages, item]);
       }
@@ -180,6 +199,25 @@ const UpdateProduct = () => {
 
   return (
     <div>
+      <SizeModal
+        options={getFilters(
+          watchedValues.category,
+          watchedValues.sub_category,
+          watchedValues.sub_category2
+        ).filter((item) => !sizes.find((size) => size.size === item))}
+        setData={(data) => {
+          if (!editingValue) {
+            setSizes((prev) => [...prev, data]);
+          } else {
+            setSizes((prev) =>
+              prev.map((item) =>
+                item === editingValue ? { ...item, ...data } : item
+              )
+            );
+          }
+        }}
+        defaultValue={editingValue}
+      />
       <div className="bg-lightgray h-full w-full p-6 py-8">
         <div className="bg-white overflow-x-auto rounded-[16px] p-4  ps-10 ">
           <div className="flex items-center  justify-between">
@@ -212,15 +250,6 @@ const UpdateProduct = () => {
                           value: true,
                           message: "This field is required",
                         },
-                        minLength: {
-                          value: 3,
-                          message: "The title should be at least 3 characters",
-                        },
-                        maxLength: {
-                          value: 100,
-                          message:
-                            "The title should be less than 100 characters",
-                        },
                       })}
                       className={` h-[45px] w-full rounded-xl border-darkstone outline-none border ps-3 text-[16px] text-gray2 ${
                         errors.name && "border-red"
@@ -240,10 +269,6 @@ const UpdateProduct = () => {
                         required: {
                           value: true,
                           message: "Please enter description",
-                        },
-                        minLength: {
-                          value: 8,
-                          message: "Minimum length is 8 character",
                         },
                       })}
                       className={`w-full resize-none pt-3 h-[112px] rounded-xl border-darkstone outline-none border ${
@@ -265,10 +290,6 @@ const UpdateProduct = () => {
                           value: true,
                           message: "Please enter key features",
                         },
-                        minLength: {
-                          value: 8,
-                          message: "Minimum length is 8 characters",
-                        },
                       })}
                       className={`w-full resize-none pt-3 h-[112px] rounded-xl border-darkstone outline-none ${
                         errors.keyFeatures && "border-red"
@@ -289,10 +310,6 @@ const UpdateProduct = () => {
                           value: true,
                           message: "This field is required",
                         },
-                        minLength: {
-                          value: 8,
-                          message: "Minimum length is 8 character ",
-                        },
                       })}
                       className={`w-full resize-none pt-3 h-[112px] rounded-xl border-darkstone outline-none border ${
                         errors.specification && "border-red"
@@ -304,107 +321,6 @@ const UpdateProduct = () => {
                       <AppFormErrorLine
                         message={errors.specification.message}
                       />
-                    )}
-                  </div>
-                  {/* productCode */}
-                  <div className="my-5">
-                    <input
-                      {...register("productCode", {
-                        required: {
-                          value: true,
-                          message: "This field is required",
-                        },
-                      })}
-                      className={`w-full h-[45px] rounded-xl border-darkstone outline-none border ps-3 text-[16px] text-gray2 ${
-                        errors.baseprice && "border-red"
-                      }`}
-                      type="text"
-                      placeholder="Enter Product Code"
-                      min={10}
-                    />
-                    {errors.productCode && (
-                      <AppFormErrorLine message={errors.productCode.message} />
-                    )}
-                  </div>
-                  {/* base price */}
-                  <div className="my-5">
-                    <input
-                      {...register("baseprice", {
-                        required: {
-                          value: true,
-                          message: "This field is required",
-                        },
-                        min: {
-                          value: 10,
-                          message: "Minimum price is 10",
-                        },
-                      })}
-                      className={`w-full h-[45px] rounded-xl border-darkstone outline-none border ps-3 text-[16px] text-gray2 ${
-                        errors.baseprice && "border-red"
-                      }`}
-                      type="number"
-                      placeholder="Base Price"
-                      min={10}
-                    />
-                    {errors.baseprice && (
-                      <AppFormErrorLine message={errors.baseprice.message} />
-                    )}
-                  </div>
-
-                  {/* discount price */}
-                  <div className="my-5">
-                    <input
-                      {...register("discountedpercent", {
-                        required: {
-                          value: true,
-                          message: "This field is required",
-                        },
-                        min: {
-                          value: 0,
-                          message:
-                            "Discounted percent should be greater than 0",
-                        },
-                        max: {
-                          value: 100,
-                          message: "Discounted percent should be less than 100",
-                        },
-                      })}
-                      className={`w-full h-[45px] rounded-xl border-darkstone outline-none border ps-3 text-[16px] text-gray2 ${
-                        errors.discountedpercent && "border-red"
-                      }`}
-                      type="number"
-                      placeholder="Discounted Price"
-                      min={0}
-                      disabled={!watchedValues.baseprice}
-                      max={100} // Discounted price should be less than base price
-                    />
-                    {errors.discountedpercent && (
-                      <AppFormErrorLine
-                        message={errors.discountedpercent.message}
-                      />
-                    )}
-                  </div>
-
-                  {/* stock */}
-                  <div className="my-5">
-                    <input
-                      {...register("stock", {
-                        required: {
-                          value: true,
-                          message: "This field is required",
-                        },
-                        validate: (value) =>
-                          value > 0 || "Stock should be greater than 0",
-                      })}
-                      className={`w-full h-[45px] rounded-xl border-darkstone outline-none border ps-3 text-[16px] text-gray2 ${
-                        errors.stock && "border-red"
-                      }`}
-                      type="number"
-                      placeholder="Stock"
-                      min={1}
-                    />
-                    {errors.stock && (
-                      <AppFormErrorLine message={errors.stock.message} />
                     )}
                   </div>
 
@@ -530,66 +446,91 @@ const UpdateProduct = () => {
                       </div>
                     )}
 
-                  {watchedValues.sub_category2 === "Gloves" && (
-                    <div className="my-5">
-                      <select
-                        {...register("glovesOption", {
-                          required: "Please select a side",
-                        })}
-                        className={`w-full h-[45px] rounded-xl border-darkstone outline-none border ps-3 text-[16px] text-gray2 ${
-                          errors.glovesOption && "border-red"
-                        }`}
-                      >
-                        <option value="" disabled selected>
-                          Select Side
-                        </option>
-                        <option value="Left">Left</option>
-                        <option value="Right">Right</option>
-                      </select>
-                      {errors.glovesOption && (
-                        <AppFormErrorLine
-                          message={errors.glovesOption.message}
-                        />
-                      )}
-                    </div>
-                  )}
-
+                  {/* Size */}
                   {getFilters(
                     watchedValues.category,
                     watchedValues.sub_category,
                     watchedValues.sub_category2
                   )?.length > 0 && (
-                    <div className="my-5 ">
-                      <div
-                        className={`w-full  px-3 rounded-xl border-darkstone  border ${
-                          errors.sub_category && " border-red"
-                        }`}
-                      >
-                        <div className="flex flex-col">
-                          {/* Placeholder option */}
-                          <label className="text-[16px] text-gray2 mb-1">
-                            Choose Size/Type
-                          </label>
-                          {/* Render options based on filters */}
-                          {getFilters(
-                            watchedValues.category,
-                            watchedValues.sub_category,
-                            watchedValues.sub_category2
-                          ).map((item, i) => (
-                            <label
-                              key={i}
-                              className="flex items-center space-x-2"
-                            >
-                              <input
-                                type="checkbox"
-                                value={item}
-                                {...register("size")}
-                                className="form-checkbox h-5 w-5 text-gray-600"
-                              />
-                              <span>{item}</span>
-                            </label>
-                          ))}
-                        </div>
+                    <button
+                      type="button"
+                      role="button"
+                      // disabled={
+                      //   getFilters(
+                      //     watchedValues.category,
+                      //     watchedValues.sub_category,
+                      //     watchedValues.sub_category2
+                      //   ).length === sizes.length
+                      // }
+                      disabled // for now user can only add size while creating product
+                      onClick={() => {
+                        setEditingValue(undefined);
+                        window.sizeModal.showModal();
+                      }}
+                      className="btn btn-outline btn-md btn-primary w-full"
+                    >
+                      Add Size
+                    </button>
+                  )}
+
+                  {sizes.length > 0 && (
+                    <div className="flex flex-col gap-2 mt-6">
+                      <span>Added Sizes:</span>
+                      <div className="flex flex-col gap-2">
+                        {sizes.map((item, i) => (
+                          <div
+                            key={i}
+                            className="flex items-center gap-3 border border-borderColor rounded-xl p-2 relative"
+                          >
+                            <span>Size: {item.size}</span>
+                            <span>Base Price: ₹{item.basePrice}</span>
+                            <span>Stock: {item.stock}</span>
+                            <span>Discount: {item.discountedPercent}%</span>
+                            <div className="opacity-80 absolute top-1/2 -translate-y-1/2 right-2 flex gap-3">
+                              <button
+                                onClick={() => {
+                                  setEditingValue(item);
+                                  window.sizeModal.showModal();
+                                }}
+                                type="button"
+                                role="button"
+                                className="p-1 bg-neutral-200 rounded-full"
+                              >
+                                <img
+                                  className="h-3 w-3"
+                                  src={editIcon}
+                                  alt=""
+                                />
+                              </button>
+
+                              <button
+                                onClick={() =>
+                                  setSizes(
+                                    sizes.filter((size) => size !== item)
+                                  )
+                                }
+                                type="button"
+                                role="button"
+                                className="p-1 bg-red rounded-full"
+                              >
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  className="h-3 w-3"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2"
+                                    d="M6 18L18 6M6 6l12 12"
+                                  />
+                                </svg>
+                              </button>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   )}
@@ -603,7 +544,7 @@ const UpdateProduct = () => {
                           {watchedValues.color && (
                             <div
                               style={{ backgroundColor: watchedValues.color }}
-                              className="h-6 w-6 rounded-full"
+                              className="h-6 w-6 rounded-full border border-gray-400"
                             />
                           )}
                         </div>
@@ -640,13 +581,13 @@ const UpdateProduct = () => {
                         {watchedValues.color && (
                           <div
                             style={{ backgroundColor: watchedValues.color }}
-                            className="h-6 w-6 rounded-full"
+                            className="h-6 w-6 rounded-full border border-gray-400"
                           />
                         )}
                         {availableColors?.map((item, i) => (
                           <div
                             style={{ backgroundColor: item }}
-                            className="relative h-6 w-6 border-borderColor rounded-full border"
+                            className="relative h-6 w-6 rounded-full border border-gray-400"
                           >
                             <button
                               onClick={() =>
@@ -802,54 +743,6 @@ const UpdateProduct = () => {
                 </span>
               )}
             </div>
-            <div className="my-[15px] flex items-center gap-2 flex-wrap lg:text-[16px] max-xl:text-[18px]">
-              Product Code:
-              {watchedValues.productCode ? (
-                <span className="text-base font-semibold">
-                  {watchedValues.productCode}
-                </span>
-              ) : (
-                <span className="text-red text-base">
-                  Please enter Product Code!
-                </span>
-              )}
-            </div>
-            <div className="my-[15px] flex items-center gap-2 flex-wrap lg:text-[16px] max-xl:text-[18px]">
-              Base Price:
-              {watchedValues.baseprice ? (
-                <span className="text-base font-semibold">
-                  {watchedValues.baseprice}
-                </span>
-              ) : (
-                <span className="text-red text-base">
-                  Please enter Base price!
-                </span>
-              )}
-            </div>
-
-            <div className="my-[15px] flex items-center gap-2 flex-wrap lg:text-[16px] max-xl:text-[18px]">
-              Discount Price:
-              {watchedValues.discountedpercent ? (
-                <span className="text-base font-semibold">
-                  {watchedValues.discountedpercent}
-                </span>
-              ) : (
-                <span className="text-red text-base">
-                  Please enter Discounted price!
-                </span>
-              )}
-            </div>
-
-            <div className="my-[15px] flex items-center gap-2 flex-wrap lg:text-[16px] max-xl:text-[18px]">
-              Stock:
-              {watchedValues.stock ? (
-                <span className="text-base font-semibold">
-                  {watchedValues.stock}
-                </span>
-              ) : (
-                <span className="text-red text-base">Please enter Stock!</span>
-              )}
-            </div>
 
             <div className="my-[15px] flex items-center gap-2 flex-wrap lg:text-[16px] max-xl:text-[18px]">
               Category:
@@ -874,31 +767,6 @@ const UpdateProduct = () => {
                 <span className="text-red text-base">
                   Please enter Subcategory!
                 </span>
-              )}
-            </div>
-
-            {watchedValues.sub_category2 === "Gloves" && (
-              <div className="my-[15px] flex items-center gap-2 flex-wrap lg:text-[16px] max-xl:text-[18px]">
-                Side:
-                {watchedValues.sub_category === "Gloves" &&
-                watchedValues.glovesOption ? (
-                  <span className="text-base font-semibold">
-                    {watchedValues.glovesOption}
-                  </span>
-                ) : (
-                  <span className="text-base font-semibold">N/A</span>
-                )}
-              </div>
-            )}
-
-            <div className="my-[15px] flex items-center gap-2 flex-wrap lg:text-[16px] max-xl:text-[18px]">
-              Size/Type:
-              {watchedValues.size ? (
-                <span className="text-base font-semibold">
-                  {watchedValues.size.join(", ")}
-                </span>
-              ) : (
-                <span className="text-red text-base">Please enter size!</span>
               )}
             </div>
 

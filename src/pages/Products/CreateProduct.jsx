@@ -12,9 +12,11 @@ import {
   subcategoriesMap,
 } from "../../assets/data/productFilters";
 import getFilters from "../../utils/getFilters";
+import SizeModal from "./SizeModal";
 
 const CreateProduct = () => {
   const [availableColors, setAvailableColors] = useState([]);
+  const [sizes, setSizes] = useState([]);
   const [categories] = useState(["Gear", "Shoes", "Helmets"]);
   const [selectedImages, setSelectedImages] = useState([]);
   const queryClient = useQueryClient();
@@ -64,6 +66,13 @@ const CreateProduct = () => {
   // form submit
   const handleFormSubmit = (data) => {
     try {
+      if (!sizes.length > 0) {
+        return Swal.fire({
+          title: "Error",
+          text: "Please add size",
+          icon: "error",
+        });
+      }
       if (selectedImages.length === 0) {
         return Swal.fire({
           title: "Error",
@@ -71,13 +80,21 @@ const CreateProduct = () => {
           icon: "error",
         });
       } else {
-        data.size = data.size.join(",");
+        data.sizes = sizes;
         const fd = new FormData();
         for (const item of selectedImages) {
           fd.append("images", item);
         }
         for (const item of Object.keys(data)) {
-          fd.append(item, data[item]);
+          if (item === "sizes" && Array.isArray(data[item])) {
+            for (let i = 0; i < data[item].length; i++) {
+              for (const key in data[item][i]) {
+                fd.append(`${item}[${i}][${key}]`, data[item][i][key]);
+              }
+            }
+          } else {
+            fd.append(item, data[item]);
+          }
         }
         const allColors = [data.color, ...availableColors];
         fd.append("Availablecolor", allColors.join(","));
@@ -111,6 +128,16 @@ const CreateProduct = () => {
 
   return (
     <div>
+      <SizeModal
+        options={getFilters(
+          watchedValues.category,
+          watchedValues.sub_category,
+          watchedValues.sub_category2
+        ).filter((item) => !sizes.find((size) => size.size === item))}
+        setData={(data) => {
+          setSizes((prev) => [...prev, data]);
+        }}
+      />
       <div className="bg-lightgray h-full w-full p-6 py-8">
         <div className="bg-white overflow-x-auto rounded-[16px] p-4  ps-10 ">
           <div className="flex items-center  justify-between">
@@ -138,14 +165,6 @@ const CreateProduct = () => {
                         value: true,
                         message: "This field is required",
                       },
-                      minLength: {
-                        value: 3,
-                        message: "The title should be at least 3 characters",
-                      },
-                      maxLength: {
-                        value: 100,
-                        message: "The title should be less than 100 characters",
-                      },
                     })}
                     className={` h-[45px] w-full rounded-xl border-darkstone outline-none border ps-3 text-[16px] text-gray2 ${
                       errors.name && "border-red"
@@ -165,10 +184,6 @@ const CreateProduct = () => {
                       required: {
                         value: true,
                         message: "Please enter description",
-                      },
-                      minLength: {
-                        value: 8,
-                        message: "Minimum length is 8 character",
                       },
                     })}
                     className={`w-full resize-none pt-3 h-[112px] rounded-xl border-darkstone outline-none border ${
@@ -190,10 +205,6 @@ const CreateProduct = () => {
                         value: true,
                         message: "Please enter key features",
                       },
-                      minLength: {
-                        value: 8,
-                        message: "Minimum length is 8 characters",
-                      },
                     })}
                     className={`w-full resize-none pt-3 h-[112px] rounded-xl border-darkstone outline-none ${
                       errors.keyFeatures && "border-red"
@@ -214,10 +225,6 @@ const CreateProduct = () => {
                         value: true,
                         message: "This field is required",
                       },
-                      minLength: {
-                        value: 8,
-                        message: "Minimum length is 8 character ",
-                      },
                     })}
                     className={`w-full resize-none pt-3 h-[112px] rounded-xl border-darkstone outline-none border ${
                       errors.specification && "border-red"
@@ -227,106 +234,6 @@ const CreateProduct = () => {
                   />
                   {errors.specification && (
                     <AppFormErrorLine message={errors.specification.message} />
-                  )}
-                </div>
-
-                {/* productCode */}
-                <div className="my-5">
-                  <input
-                    {...register("productCode", {
-                      required: {
-                        value: true,
-                        message: "This field is required",
-                      },
-                    })}
-                    className={`w-full h-[45px] rounded-xl border-darkstone outline-none border ps-3 text-[16px] text-gray2 ${
-                      errors.baseprice && "border-red"
-                    }`}
-                    type="text"
-                    placeholder="Enter Product Code"
-                    min={10}
-                  />
-                  {errors.productCode && (
-                    <AppFormErrorLine message={errors.productCode.message} />
-                  )}
-                </div>
-                {/* base price */}
-                <div className="my-5">
-                  <input
-                    {...register("baseprice", {
-                      required: {
-                        value: true,
-                        message: "This field is required",
-                      },
-                      min: {
-                        value: 10,
-                        message: "Minimum price is 10",
-                      },
-                    })}
-                    className={`w-full h-[45px] rounded-xl border-darkstone outline-none border ps-3 text-[16px] text-gray2 ${
-                      errors.baseprice && "border-red"
-                    }`}
-                    type="number"
-                    placeholder="Base Price"
-                    min={10}
-                  />
-                  {errors.baseprice && (
-                    <AppFormErrorLine message={errors.baseprice.message} />
-                  )}
-                </div>
-
-                {/* discount percentage */}
-                <div className="my-5">
-                  <input
-                    {...register("discountedpercent", {
-                      required: {
-                        value: true,
-                        message: "This field is required",
-                      },
-                      min: {
-                        value: 1,
-                        message: "Minimum price is 1",
-                      },
-                      max: {
-                        value: 100,
-                        message: "Discounted percentage should be 1 to 100",
-                      },
-                    })}
-                    className={`w-full h-[45px] rounded-xl border-darkstone outline-none border ps-3 text-[16px] text-gray2 ${
-                      errors.discountedpercent && "border-red"
-                    }`}
-                    type="number"
-                    placeholder="Discounted Percentage"
-                    min={0}
-                    max={100} // Discounted price should be less than base price
-                  />
-                  {errors.discountedpercent && (
-                    <AppFormErrorLine
-                      message={errors.discountedpercent.message}
-                    />
-                  )}
-                </div>
-
-                {/* stock */}
-                <div className="my-5">
-                  <input
-                    {...register("stock", {
-                      required: {
-                        value: true,
-                        message: "This field is required",
-                      },
-                      validate: (value) =>
-                        value > 0 || "Stock should be greater than 0",
-                    })}
-                    className={`w-full h-[45px] rounded-xl border-darkstone outline-none border ps-3 text-[16px] text-gray2 ${
-                      errors.stock && "border-red"
-                    }`}
-                    type="number"
-                    placeholder="Stock"
-                    min={1}
-                  />
-                  {errors.stock && (
-                    <AppFormErrorLine message={errors.stock.message} />
                   )}
                 </div>
 
@@ -448,67 +355,67 @@ const CreateProduct = () => {
                     </div>
                   )}
 
-                {/* Additional select field for Gloves subcategory */}
-                {watchedValues.sub_category2 === "Gloves" && (
-                  <div className="my-5">
-                    <select
-                      {...register("glovesOption", {
-                        required: "Please select a side",
-                      })}
-                      className={`w-full h-[45px] rounded-xl border-darkstone outline-none border ps-3 text-[16px] text-gray2 ${
-                        errors.glovesOption && "border-red"
-                      }`}
-                    >
-                      <option value="" disabled selected>
-                        Select Side
-                      </option>
-                      <option value="Left">Left</option>
-                      <option value="Right">Right</option>
-                    </select>
-                    {errors.glovesOption && (
-                      <AppFormErrorLine message={errors.glovesOption.message} />
-                    )}
-                  </div>
-                )}
-
-                {/* size */}
                 {/* Size */}
                 {getFilters(
                   watchedValues.category,
                   watchedValues.sub_category,
                   watchedValues.sub_category2
                 )?.length > 0 && (
-                  <div className="my-5 ">
-                    <div
-                      className={`w-full  px-3 rounded-xl border-darkstone  border ${
-                        errors.sub_category && " border-red"
-                      }`}
-                    >
-                      <div className="flex flex-col">
-                        {/* Placeholder option */}
-                        <label className="text-[16px] text-gray2 mb-1">
-                          Choose Size/Type
-                        </label>
-                        {/* Render options based on filters */}
-                        {getFilters(
-                          watchedValues.category,
-                          watchedValues.sub_category,
-                          watchedValues.sub_category2
-                        ).map((item, i) => (
-                          <label
-                            key={i}
-                            className="flex items-center space-x-2"
+                  <button
+                    type="button"
+                    role="button"
+                    disabled={
+                      getFilters(
+                        watchedValues.category,
+                        watchedValues.sub_category,
+                        watchedValues.sub_category2
+                      ).length === sizes.length
+                    }
+                    onClick={() => window.sizeModal.showModal()}
+                    className="btn btn-outline btn-md btn-primary w-full"
+                  >
+                    Add Size
+                  </button>
+                )}
+
+                {sizes.length > 0 && (
+                  <div className="flex flex-col gap-2 mt-6">
+                    <span>Added Sizes:</span>
+                    <div className="flex flex-col gap-2">
+                      {sizes.map((item, i) => (
+                        <div
+                          key={i}
+                          className="flex items-center gap-3 border border-borderColor rounded-xl p-2 relative"
+                        >
+                          <span>Size: {item.size}</span>
+                          <span>Base Price: ₹{item.basePrice}</span>
+                          <span>Stock: {item.stock}</span>
+                          <span>Discount: {item.discountedPercent}%</span>
+                          <button
+                            onClick={() =>
+                              setSizes(sizes.filter((size) => size !== item))
+                            }
+                            type="button"
+                            role="button"
+                            className="p-1 bg-red rounded-full opacity-80 absolute top-1/2 -translate-y-1/2 right-2"
                           >
-                            <input
-                              type="checkbox"
-                              value={item}
-                              {...register("size")}
-                              className="form-checkbox h-5 w-5 text-gray-600"
-                            />
-                            <span>{item}</span>
-                          </label>
-                        ))}
-                      </div>
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-3 w-3"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M6 18L18 6M6 6l12 12"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}
@@ -522,7 +429,7 @@ const CreateProduct = () => {
                         {watchedValues.color && (
                           <div
                             style={{ backgroundColor: watchedValues.color }}
-                            className="h-6 w-6 rounded-full"
+                            className="h-6 w-6 rounded-full border border-gray-400"
                           />
                         )}
                       </div>
@@ -559,13 +466,13 @@ const CreateProduct = () => {
                       {watchedValues.color && (
                         <div
                           style={{ backgroundColor: watchedValues.color }}
-                          className="h-6 w-6 rounded-full"
+                          className="h-6 w-6 rounded-full border border-gray-400"
                         />
                       )}
                       {availableColors?.map((item, i) => (
                         <div
                           style={{ backgroundColor: item }}
-                          className="relative h-6 w-6 border-borderColor rounded-full border"
+                          className="relative h-6 w-6 border border-gray-400 rounded-full"
                         >
                           <button
                             onClick={() =>
@@ -720,55 +627,6 @@ const CreateProduct = () => {
               )}
             </div>
             <div className="my-[15px] flex items-center gap-2 flex-wrap lg:text-[16px] max-xl:text-[18px]">
-              Product Code:
-              {watchedValues.productCode ? (
-                <span className="text-base font-semibold">
-                  {watchedValues.productCode}
-                </span>
-              ) : (
-                <span className="text-red text-base">
-                  Please enter Product Code!
-                </span>
-              )}
-            </div>
-            <div className="my-[15px] flex items-center gap-2 flex-wrap lg:text-[16px] max-xl:text-[18px]">
-              Base Price:
-              {watchedValues.baseprice ? (
-                <span className="text-base font-semibold">
-                  {watchedValues.baseprice}
-                </span>
-              ) : (
-                <span className="text-red text-base">
-                  Please enter Base price!
-                </span>
-              )}
-            </div>
-
-            <div className="my-[15px] flex items-center gap-2 flex-wrap lg:text-[16px] max-xl:text-[18px]">
-              Discount Percentage:
-              {watchedValues.discountedpercent ? (
-                <span className="text-base font-semibold">
-                  {watchedValues.discountedpercent}
-                </span>
-              ) : (
-                <span className="text-red text-base">
-                  Please enter Discounted price!
-                </span>
-              )}
-            </div>
-
-            <div className="my-[15px] flex items-center gap-2 flex-wrap lg:text-[16px] max-xl:text-[18px]">
-              Stock:
-              {watchedValues.stock ? (
-                <span className="text-base font-semibold">
-                  {watchedValues.stock}
-                </span>
-              ) : (
-                <span className="text-red text-base">Please enter Stock!</span>
-              )}
-            </div>
-
-            <div className="my-[15px] flex items-center gap-2 flex-wrap lg:text-[16px] max-xl:text-[18px]">
               Category:
               {watchedValues.category ? (
                 <span className="text-base font-semibold">
@@ -791,31 +649,6 @@ const CreateProduct = () => {
                 <span className="text-red text-base">
                   Please enter Subcategory!
                 </span>
-              )}
-            </div>
-
-            {watchedValues.sub_category2 === "Gloves" && (
-              <div className="my-[15px] flex items-center gap-2 flex-wrap lg:text-[16px] max-xl:text-[18px]">
-                Side:
-                {watchedValues.sub_category === "Gloves" &&
-                watchedValues.glovesOption ? (
-                  <span className="text-base font-semibold">
-                    {watchedValues.glovesOption}
-                  </span>
-                ) : (
-                  <span className="text-base font-semibold">N/A</span>
-                )}
-              </div>
-            )}
-
-            <div className="my-[15px] flex items-center gap-2 flex-wrap lg:text-[16px] max-xl:text-[18px]">
-              Size/Type:
-              {watchedValues.size ? (
-                <span className="text-base font-semibold">
-                  {watchedValues.size?.join(", ")}
-                </span>
-              ) : (
-                <span className="text-red text-base">Please enter size!</span>
               )}
             </div>
 
