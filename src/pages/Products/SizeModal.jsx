@@ -2,7 +2,12 @@ import { useForm } from "react-hook-form";
 import AppFormErrorLine from "../../components/AppFormErrorLine";
 import { useEffect } from "react";
 
-const SizeModal = ({ setData, options, defaultValue = undefined }) => {
+const SizeModal = ({
+  setData,
+  options,
+  defaultValue = undefined,
+  subCategory2,
+}) => {
   const {
     register,
     handleSubmit,
@@ -85,6 +90,53 @@ const SizeModal = ({ setData, options, defaultValue = undefined }) => {
                 <AppFormErrorLine message={errors.size.message} />
               )}
             </div>
+            {/* side */}
+            {[
+              "Gloves",
+              "Leg Guard",
+              "Thigh Pad",
+              "Inner ThighPad",
+              "Arm Guard",
+            ].includes(subCategory2) && (
+              <div className="flex flex-col gap-1">
+                <div
+                  className={`w-full px-3 rounded-xl h-8 border-darkstone border ${
+                    errors.side && " border-red"
+                  }`}
+                >
+                  <div className="flex flex-col w-full h-full">
+                    {/* Placeholder option */}
+
+                    <select
+                      {...register("side", {
+                        required: {
+                          value: true,
+                          message: "This field is required",
+                        },
+                      })}
+                      className="form-select h-full outline:none w-full text-gray-600"
+                    >
+                      <option
+                        disabled
+                        selected
+                        value={""}
+                        className="text-[16px] text-gray2 mb-1"
+                      >
+                        Choose Side
+                      </option>
+                      {["Left", "Right"].map((item, i) => (
+                        <option key={i} value={item}>
+                          {item}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                {errors.side && (
+                  <AppFormErrorLine message={errors.side.message} />
+                )}
+              </div>
+            )}
             {/* base price */}
             <div className="">
               <input

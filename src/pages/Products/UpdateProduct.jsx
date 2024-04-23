@@ -204,7 +204,7 @@ const UpdateProduct = () => {
           watchedValues.category,
           watchedValues.sub_category,
           watchedValues.sub_category2
-        ).filter((item) => !sizes.find((size) => size.size === item))}
+        )}
         setData={(data) => {
           if (!editingValue) {
             setSizes((prev) => [...prev, data]);
@@ -216,12 +216,13 @@ const UpdateProduct = () => {
             );
           }
         }}
+        subCategory2={watchedValues.sub_category2}
         defaultValue={editingValue}
       />
       <div className="bg-lightgray h-full w-full p-6 py-8">
         <div className="bg-white overflow-x-auto rounded-[16px] p-4  ps-10 ">
           <div className="flex items-center  justify-between">
-            <Link to="/admin/products" className="">
+            <Link to="/products" className="">
               <img src={backIcon} alt="" />
             </Link>
             <h1 className="text-[32px] text-black font-bold flex-1 me-6 text-center">
@@ -240,7 +241,7 @@ const UpdateProduct = () => {
                 {/* form */}
                 <form
                   onSubmit={handleSubmit(handleFormSubmit)}
-                  className="max-w-[513px] md:min-w-[460px] min-w-[300px]"
+                  className="max-w-[700px] w-full md:min-w-[460px] min-w-[300px]"
                 >
                   {/* name  */}
                   <div className="">
@@ -485,6 +486,15 @@ const UpdateProduct = () => {
                             <span>Size: {item.size}</span>
                             <span>Base Price: ₹{item.basePrice}</span>
                             <span>Stock: {item.stock}</span>
+                            {[
+                              "Gloves",
+                              "Leg Guard",
+                              "Thigh Pad",
+                              "Inner ThighPad",
+                              "Arm Guard",
+                            ].includes(watchedValues.sub_category2) && (
+                              <span>Side: {item.side}</span>
+                            )}
                             <span>Discount: {item.discountedPercent}%</span>
                             <div className="opacity-80 absolute top-1/2 -translate-y-1/2 right-2 flex gap-3">
                               <button
@@ -501,32 +511,6 @@ const UpdateProduct = () => {
                                   src={editIcon}
                                   alt=""
                                 />
-                              </button>
-
-                              <button
-                                onClick={() =>
-                                  setSizes(
-                                    sizes.filter((size) => size !== item)
-                                  )
-                                }
-                                type="button"
-                                role="button"
-                                className="p-1 bg-red rounded-full"
-                              >
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  className="h-3 w-3"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  stroke="currentColor"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth="2"
-                                    d="M6 18L18 6M6 6l12 12"
-                                  />
-                                </svg>
                               </button>
                             </div>
                           </div>

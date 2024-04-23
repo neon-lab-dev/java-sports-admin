@@ -133,15 +133,16 @@ const CreateProduct = () => {
           watchedValues.category,
           watchedValues.sub_category,
           watchedValues.sub_category2
-        ).filter((item) => !sizes.find((size) => size.size === item))}
+        )}
         setData={(data) => {
           setSizes((prev) => [...prev, data]);
         }}
+        subCategory2={watchedValues.sub_category2}
       />
       <div className="bg-lightgray h-full w-full p-6 py-8">
         <div className="bg-white overflow-x-auto rounded-[16px] p-4  ps-10 ">
           <div className="flex items-center  justify-between">
-            <Link to="/admin/products" className="">
+            <Link to="/products" className="">
               <img src={backIcon} alt="" />
             </Link>
             <h1 className="text-[32px] text-black font-bold flex-1 me-6 text-center">
@@ -155,7 +156,7 @@ const CreateProduct = () => {
               {/* form */}
               <form
                 onSubmit={handleSubmit(handleFormSubmit)}
-                className="max-w-[513px] md:min-w-[460px] min-w-[300px]"
+                className="max-w-[700px] w-full md:min-w-[460px] min-w-[300px]"
               >
                 {/* name  */}
                 <div className="">
@@ -390,6 +391,15 @@ const CreateProduct = () => {
                           <span>Size: {item.size}</span>
                           <span>Base Price: ₹{item.basePrice}</span>
                           <span>Stock: {item.stock}</span>
+                          {[
+                            "Gloves",
+                            "Leg Guard",
+                            "Thigh Pad",
+                            "Inner ThighPad",
+                            "Arm Guard",
+                          ].includes(watchedValues.sub_category2) && (
+                            <span>Side: {item.side}</span>
+                          )}
                           <span>Discount: {item.discountedPercent}%</span>
                           <button
                             onClick={() =>
