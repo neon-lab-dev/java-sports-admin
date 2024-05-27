@@ -365,13 +365,6 @@ const CreateProduct = () => {
                   <button
                     type="button"
                     role="button"
-                    disabled={
-                      getFilters(
-                        watchedValues.category,
-                        watchedValues.sub_category,
-                        watchedValues.sub_category2
-                      ).length === sizes.length
-                    }
                     onClick={() => window.sizeModal.showModal()}
                     className="btn btn-outline btn-md btn-primary w-full"
                   >
